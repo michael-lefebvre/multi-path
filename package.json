@@ -1,6 +1,6 @@
 {
   "name": "multi-path",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "require a folder/file without the pain",
   "main": "lib/index.js",
   "scripts": {

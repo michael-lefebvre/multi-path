@@ -1,45 +1,45 @@
 const fs   = require('fs')
     , path = require('path')
+    , ext  = [ '.js', '.json' ]
 
-module.exports = function multipath( pathString, ext )
+const isFile = filePath =>
 {
-  ext = ext || [ '.js', '.json' ]
+  try
+  {
+    if( fs.statSync( filePath ) )
+      return filePath
+  }
+  catch( e ) { return false }
+}
 
+module.exports = function multipath( pathString )
+{
   try
   {
     var isDir = fs.lstatSync( pathString ).isDirectory()
+
+    // file path with extension
+    if( !isDir && isFile( pathString ) )
+      return require( pathString )
   }
   catch( err )
   {
-    if( typeof ext === 'string' )
-    {
-      // extension start with a dot
-      if( ext.substr(0,1) !== '.' )
-        ext = '.' + ext
+    var filename = ext.filter( e => isFile(`${pathString}${e}`) )
 
-      var filename = pathString + ext
-
-      if( fs.lstatSync( filename ).isFile() )
-        return require( filename )
-    }
-
-    if( ext instanceof Array )
-    {
-      var filename = ext.filter( e =>
-      {
-        try
-        {
-          if( fs.statSync(`${pathString}${e}`) )
-            return `${pathString}${e}`
-        }
-        catch( e ) { return false }
-      })
-
-      if( filename.length === 1 )
-        return require( `${pathString}${filename[0]}` )
-    }
+    if( filename.length === 1 )
+      return require( `${pathString}${filename[0]}` )
 
     throw new Error(`'${pathString}' is not a directory or a file`)
+  }
+
+  // last check
+  if( !isDir )
+    throw new Error(`'${pathString}' is not a directory or a file`)
+  else
+  {
+    // if directory has an `index.js` file
+    if( isFile( `${pathString}/index.js` ) )
+      return require( `${pathString}/index.js` )
   }
 
   const modules  = {}
